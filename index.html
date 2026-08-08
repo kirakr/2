@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲームタイトル画面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+            cursor: pointer;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* 初期状態（文字無しの完全に真っ白な画面） */
+        #init-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        /* タイトル画面全体のコンテナ（最初は非表示） */
+        .title-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .title-container.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* 背景画像 */
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* タイトルロゴ画像（中央から拡大しながら登場） */
+        .title-logo {
+            position: absolute;
+            z-index: 2;
+            width: 50%;
+            max-width: 600px;
+            top: 25%;
+            animation: zoomIn 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* -TAP TO START- のスタイル（点滅） */
+        .tap-to-start {
+            position: absolute;
+            bottom: 15%;
+            z-index: 2;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 150, 255, 0.8), 0 0 20px rgba(0, 150, 255, 0.8);
+            animation: blink 1.2s infinite ease-in-out;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.2;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 最初は文字無しの完全に真っ白な画面 -->
+    <div id="init-screen"></div>
+
+    <!-- タイトル画面 -->
+    <div class="title-container" id="title-screen">
+        <!-- 背景画像 -->
+        <img src="Back.png" alt="背景" class="bg-image">
+
+        <!-- タイトルロゴ -->
+        <img src="Title.png" alt="タイトルロゴ" class="title-logo">
+
+        <!-- TAP TO START 文字 -->
+        <div class="tap-to-start">- TAP TO START -</div>
+    </div>
+
+    <!-- BGM (ループ再生) -->
+    <audio id="bgm" src="Main.mp3" loop></audio>
+    <!-- 効果音 -->
+    <audio id="click-se" src="click.mp3"></audio>
+
+    <script>
+        const initScreen = document.getElementById('init-screen');
+        const titleScreen = document.getElementById('title-screen');
+        const bgm = document.getElementById('bgm');
+        const clickSe = document.getElementById('click-se');
+
+        let isTitleActive = false;
+
+        // 1回目のタップ：全画面化 ＆ 真っ白画面からタイトル画面へ移行 ＆ BGM再生
+        initScreen.addEventListener('click', () => {
+            if (!isTitleActive) {
+                isTitleActive = true;
+
+                // 強制全画面表示のリクエスト
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => {
+                        console.log("全画面表示の実行に失敗しました:", err);
+                    });
+                } else if (elem.webkitRequestFullscreen) { /* Safari用 */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE/Edge用 */
+                    elem.msRequestFullscreen();
+                }
+
+                // BGM再生
+                bgm.play().catch(error => {
+                    console.log("BGMの再生に失敗しました:", error);
+                });
+
+                // 真っ白画面をフェードアウトして消す
+                initScreen.style.opacity = '0';
+                setTimeout(() => {
+                    initScreen.style.display = 'none';
+                    // タイトル画面を表示
+                    titleScreen.classList.add('show');
+                }, 500);
+            }
+        });
+
+        // 2回目のタップ：click.mp3を流して index.html へ飛ぶ
+        titleScreen.addEventListener('click', () => {
+            if (isTitleActive) {
+                // 効果音再生
+                clickSe.play().catch(error => {
+                    console.log("効果音の再生に失敗しました:", error);
+                });
+
+                // 音が少し流れる猶予（約0.3秒後）を持たせてからページ遷移
+                setTimeout(() => {
+                    window.location.href = 'main.html';
+                }, 300);
+            }
+        });
+    </script>
+
+</body>
+</html>
